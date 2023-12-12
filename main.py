@@ -10,7 +10,8 @@ from data.form_data import sql_my_auto, sql_add_users_viewing, sql_check_yes, sq
 from data.form_data import sql_select_50_150, sql_select_150_300, sql_select_300_1, sql_select_1
 from data.form_data import sql_viewing_50_150, sql_viewing_150_300, sql_viewing_300_1, sql_viewing_1
 from data.form_data import sql_owner_50_150, sql_owner_150_300, sql_owner_300_1, sql_owner_1
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
+from config import TOKEN
 import os
 
 START_WELCOME = '''
@@ -33,10 +34,10 @@ WELCOME_BACK = '''
 Главное меню!
 '''
 
-load_dotenv()
-TOKEN = token = os.environ.get("TOKEN")
+#load_dotenv()
+#TOKEN = token = os.environ.get("TOKEN")
 
-bot = Bot(TOKEN)                                  #  
+bot = Bot(token= TOKEN)                                  #  
 dp = Dispatcher(bot, storage=MemoryStorage())     #  Важные токены для отправки
                                                   #  и запуска бота
 admin_id_alex = 1387002896                        #          

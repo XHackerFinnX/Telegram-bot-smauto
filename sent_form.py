@@ -1,19 +1,19 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types, Dispatcher, Bot
-import time
-import datetime
-from dotenv import load_dotenv
-import os
 from keyboard import kb_start, kb_remove, check_auto_yes_and_no
 from week import day_week
 from data.form_data import sql_add_command, sql_add_command_check, sql_add_users
+from config import TOKEN
+import time
+import datetime
+#from dotenv import load_dotenv
+import os
 
+#load_dotenv()
+#TOKEN = token = os.environ.get("TOKEN")
 
-load_dotenv()
-TOKEN = token = os.environ.get("TOKEN")
-
-bot = Bot(TOKEN) 
+bot = Bot(token= TOKEN) 
 
 smauto_bot = "-1001861129956"
 

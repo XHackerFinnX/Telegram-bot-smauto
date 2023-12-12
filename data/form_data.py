@@ -7,13 +7,15 @@ from keyboard import kb_viewing, kb_price_range, kb_contact, kb_end, change_del,
 import time
 import os.path
 import os
-from dotenv import load_dotenv
+from config import TOKEN
+#from dotenv import load_dotenv
 
 
-load_dotenv()
-TOKEN = token = os.environ.get("TOKEN")
+#load_dotenv()
+#TOKEN = token = os.environ.get("TOKEN")
 
-bot = Bot(TOKEN)
+bot = Bot(token= TOKEN)
+
 
 #Подключение базы данных----------------------------------------------
 
