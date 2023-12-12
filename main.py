@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher, types
+from aiogram.utils.exceptions import TerminatedByOtherGetUpdates, NetworkError
 from aiogram.utils import executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from keyboard import kb_start, kb_price_range, kb_form, kb_continue_form
@@ -265,4 +266,9 @@ async def form_yes_no(callback: types.CallbackQuery):
 #ЗАПУСК БОТА ----------------------------------
 
 if __name__ == "__main__":
-    executor.start_polling(dp)
+    try:
+        executor.start_polling(dp)
+    except TerminatedByOtherGetUpdates as ter:
+        print(ter)
+    except NetworkError as net:
+        print(net)
