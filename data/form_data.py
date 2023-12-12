@@ -2,14 +2,18 @@ import sqlite3 as sq
 import json
 from aiogram import types, Dispatcher, Bot
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from config import TOKEN_API
 from aiogram import Bot, types
 from keyboard import kb_viewing, kb_price_range, kb_contact, kb_end, change_del, kb_back_global
 import time
-
 import os.path
+import os
+from dotenv import load_dotenv
 
-bot = Bot(TOKEN_API)
+
+load_dotenv()
+TOKEN = token = os.environ.get("TOKEN")
+
+bot = Bot(TOKEN)
 
 #Подключение базы данных----------------------------------------------
 

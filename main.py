@@ -1,7 +1,6 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from config import TOKEN_API
 from keyboard import kb_start, kb_price_range, kb_form, kb_continue_form
 from sent_form import register_handlers_form, date, result
 from week import day_week
@@ -10,6 +9,8 @@ from data.form_data import sql_my_auto, sql_add_users_viewing, sql_check_yes, sq
 from data.form_data import sql_select_50_150, sql_select_150_300, sql_select_300_1, sql_select_1
 from data.form_data import sql_viewing_50_150, sql_viewing_150_300, sql_viewing_300_1, sql_viewing_1
 from data.form_data import sql_owner_50_150, sql_owner_150_300, sql_owner_300_1, sql_owner_1
+from dotenv import load_dotenv
+import os
 
 START_WELCOME = '''
 Добро пожаловать в SMAUTO - бот для продажи и покупки машин!
@@ -31,7 +32,10 @@ WELCOME_BACK = '''
 Главное меню!
 '''
 
-bot = Bot(TOKEN_API)                              #  
+load_dotenv()
+TOKEN = token = os.environ.get("TOKEN")
+
+bot = Bot(TOKEN)                                  #  
 dp = Dispatcher(bot, storage=MemoryStorage())     #  Важные токены для отправки
                                                   #  и запуска бота
 admin_id_alex = 1387002896                        #          

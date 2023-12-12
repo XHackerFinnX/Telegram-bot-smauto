@@ -3,13 +3,17 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types, Dispatcher, Bot
 import time
 import datetime
-from config import TOKEN_API
+from dotenv import load_dotenv
+import os
 from keyboard import kb_start, kb_remove, check_auto_yes_and_no
 from week import day_week
 from data.form_data import sql_add_command, sql_add_command_check, sql_add_users
 
 
-bot = Bot(TOKEN_API)
+load_dotenv()
+TOKEN = token = os.environ.get("TOKEN")
+
+bot = Bot(TOKEN) 
 
 smauto_bot = "-1001861129956"
 
