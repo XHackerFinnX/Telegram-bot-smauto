@@ -2,20 +2,18 @@ import sqlite3 as sq
 import json
 from aiogram import types, Dispatcher, Bot
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from config import TOKEN_API
 from aiogram import Bot, types
 from keyboard import kb_viewing, kb_price_range, kb_contact, kb_end, change_del, kb_back_global
 import time
+
 import os.path
-import os
-from config import TOKEN
-#from dotenv import load_dotenv
 
+time.sleep(5)
 
-#load_dotenv()
-#TOKEN = token = os.environ.get("TOKEN")
+bot = Bot(TOKEN_API)
 
-bot = Bot(token= TOKEN)
-
+time.sleep(5)
 
 #Подключение базы данных----------------------------------------------
 
@@ -75,7 +73,8 @@ def sql_start_auto_check():
                                                                 fname TEXT,
                                                                 lname TEXT,
                                                                 uname TEXT,
-                                                                status TEXT)''')
+                                                                status TEXT,
+                                                                sent_message TEXT)''')
     base_ac.commit()
 
 
@@ -123,7 +122,7 @@ def sql_add_command(marka, model, year, photo, description, address, price, name
     base.commit()
     
 
-def sql_add_command_check(marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status):
+def sql_add_command_check(marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message):
     photo = json.dumps(photo)
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -148,10 +147,11 @@ def sql_add_command_check(marka, model, year, photo, description, address, price
                                                                 fname TEXT,
                                                                 lname TEXT,
                                                                 uname TEXT,
-                                                                status TEXT)''')
+                                                                status TEXT,
+                                                                sent_message TEXT)''')
         db.commit()
     
-        cur_ac.execute(f"INSERT INTO form_check_auto VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status))
+        cur_ac.execute(f"INSERT INTO form_check_auto VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message))
         db.commit()
         
         
@@ -220,14 +220,15 @@ async def sql_check_yes(id_user):
                                                                 fname TEXT,
                                                                 lname TEXT,
                                                                 uname TEXT,
-                                                                status TEXT)''')
+                                                                status TEXT,
+                                                                sent_message TEXT)''')
         db.commit()
     
         for id in db.execute(f"SELECT id_user, status FROM form_check_auto").fetchall():
             if id_user == id[0]:
                 db.commit()
                 
-                info = db.execute(f"SELECT marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status FROM form_check_auto WHERE {id_user}").fetchall()
+                info = db.execute(f"SELECT marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message FROM form_check_auto WHERE {id_user}").fetchall()
                 photo = json.loads(info[0][3])
                 sql_add_command(info[0][0], info[0][1], info[0][2], photo, info[0][4], info[0][5], info[0][6], info[0][7], info[0][8], info[0][9], info[0][10], info[0][11], info[0][12], info[0][13], info[0][14], info[0][15], info[0][16], info[0][17], "YES")
                 db.commit()
@@ -236,6 +237,7 @@ async def sql_check_yes(id_user):
                 db.commit()
                 
                 await bot.send_message(id_user, text="Ваше объявление опубликовано!")
+                
         
 
 async def sql_check_no(id_user):
@@ -261,7 +263,8 @@ async def sql_check_no(id_user):
                                                                 fname TEXT,
                                                                 lname TEXT,
                                                                 uname TEXT,
-                                                                status TEXT)''')
+                                                                status TEXT,
+                                                                sent_message TEXT)''')
         db.commit()
         
         for id in db.execute(f"SELECT id_user, status FROM form_check_auto").fetchall():
@@ -324,13 +327,13 @@ async def sql_my_remove_auto(id_user):
 #Следующее авто----------------------------------------------------------------    
     
 async def sql_select_50_150(message: types.Message, next_auto):
-    count_50 = len(cur.execute(f"SELECT marka, model, year, photo, price FROM form_auto WHERE price BETWEEN 50000 AND 150000").fetchall())
+    count_50 = len(cur.execute(f"SELECT marka, model, year, photo, price FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall())
     
     if count_50 != 0 and next_auto == -1:
         return "YES"
     
     if count_50 != 0:
-        info = cur.execute(f"SELECT marka, model, year, photo, price FROM form_auto WHERE price BETWEEN 50000 AND 150000").fetchall()
+        info = cur.execute(f"SELECT marka, model, year, photo, price FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall()
         try:
             info = info[next_auto]
             photo = json.loads(info[3])
@@ -465,7 +468,7 @@ async def sql_my_auto(message: types.Message):
 #Просмотр авто-----------------------------------------------
 
 async def sql_viewing_50_150(message: types.Message, viewing_auto):
-    info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price BETWEEN 50000 AND 150000").fetchall()
+    info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall()
     info = info[viewing_auto]
     photo = json.loads(info[3])
     media_photo = [types.InputMediaPhoto(photo[0],  f"{info[7]}. Дата: {info[8]}.{info[9]}.{info[10]}\n"
@@ -542,7 +545,7 @@ async def sql_viewing_1(message: types.Message, viewing_auto):
 #Связь с владельцем авто через просмотр его данных через базу----------------
 
 async def sql_owner_50_150(message: types.Message, viewing_auto):
-    info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price BETWEEN 50000 AND 150000").fetchall()
+    info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall()
     info = info[viewing_auto]
     data_owner = f"Имя: {info[0]}\nФамилия: {info[1]}\nНомер телефона: {info[2]}\nТелеграм: {info[3]} {info[4]} или {info[5]}\nАдрес: {info[6]}"
     

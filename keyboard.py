@@ -1,5 +1,6 @@
 from aiogram import types
 
+
 kb_start = types.ReplyKeyboardMarkup(resize_keyboard=True)
 kb_price = types.KeyboardButton("Купить")
 kb_sell = types.KeyboardButton("Продать")
@@ -8,7 +9,7 @@ kb_help = types.KeyboardButton("Поддержать")
 kb_start.add(kb_price, kb_sell, kb_my_auto, kb_help)
 
 kb_price_range = types.ReplyKeyboardMarkup(resize_keyboard=True)
-kb_50_150 = types.KeyboardButton("50к - 150к")
+kb_50_150 = types.KeyboardButton("0 - 150к")
 kb_150_300 = types.KeyboardButton("150к - 300к")
 kb_300_1lm = types.KeyboardButton("300к - 1 млн")
 kb_1lm_plus = types.KeyboardButton("1млн+")

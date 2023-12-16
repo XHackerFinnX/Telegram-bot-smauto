@@ -1,7 +1,8 @@
 from aiogram import Bot, Dispatcher, types
-from aiogram.utils.exceptions import TerminatedByOtherGetUpdates, NetworkError
 from aiogram.utils import executor
+from aiogram.utils.exceptions import MessageToDeleteNotFound, TimeoutWarning
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from config import TOKEN_API
 from keyboard import kb_start, kb_price_range, kb_form, kb_continue_form
 from sent_form import register_handlers_form, date, result
 from week import day_week
@@ -10,9 +11,7 @@ from data.form_data import sql_my_auto, sql_add_users_viewing, sql_check_yes, sq
 from data.form_data import sql_select_50_150, sql_select_150_300, sql_select_300_1, sql_select_1
 from data.form_data import sql_viewing_50_150, sql_viewing_150_300, sql_viewing_300_1, sql_viewing_1
 from data.form_data import sql_owner_50_150, sql_owner_150_300, sql_owner_300_1, sql_owner_1
-#from dotenv import load_dotenv
-from config import TOKEN
-import os
+from time import sleep
 
 START_WELCOME = '''
 Добро пожаловать в SMAUTO - бот для продажи и покупки машин!
@@ -34,13 +33,17 @@ WELCOME_BACK = '''
 Главное меню!
 '''
 
-#load_dotenv()
-#TOKEN = token = os.environ.get("TOKEN")
+sleep(5)
 
-bot = Bot(token= TOKEN)                                  #  
+bot = Bot(TOKEN_API)                              #  
 dp = Dispatcher(bot, storage=MemoryStorage())     #  Важные токены для отправки
                                                   #  и запуска бота
-admin_id_alex = 1387002896                        #          
+                                                  
+sleep(5)                                                 
+                                                  
+admin_id_alex = 1387002896
+admin_id_andry = 678570906                        # 
+admin_id_max = 413536782                          #         
 smauto_bot = "-1001861129956"                     #
 
 
@@ -55,9 +58,11 @@ async def start_command(message: types.Message):  #
 register_handlers_form(dp) #Форма для продажи автомобиля
 
 sql_start_auto()                 #Запуск базы данных
-sql_start_users()
-sql_start_auto_check()
-sql_start_users_viewing()
+sql_start_users()                #
+sql_start_auto_check()           #
+sql_start_users_viewing()        #
+
+sleep(5)
 
 #Перемещение по страницам --------------------------------------------------------------
 
@@ -69,7 +74,6 @@ async def sent_print(message: types.Message):
                                text=BUY_AUTO,
                                reply_markup=kb_price_range)
         await bot.delete_message(message.chat.id, message.message_id)
-        #await message.delete()
         
     elif "Продать" == message.text:
         await bot.send_message(message.chat.id,
@@ -119,11 +123,11 @@ next_auto_150_300 = -1
 next_auto_300_1 = -1
 next_auto_1 = -1
 
-@dp.message_handler(text= ["50к - 150к", "150к - 300к", "300к - 1 млн", "1млн+"])
+@dp.message_handler(text= ["0 - 150к", "150к - 300к", "300к - 1 млн", "1млн+"])
 async def sent_price(message: types.Message):
     global next_auto_50_150, next_auto_150_300, next_auto_300_1, next_auto_1
     
-    if "50к - 150к" == message.text:
+    if "0 - 150к" == message.text:
         if await sql_select_50_150(message, -1) != "NO":
             await sql_select_50_150(message, 0)
             next_auto_50_150 = 0
@@ -248,6 +252,10 @@ async def form_yes_no(callback: types.CallbackQuery):
     for id_users in users:
         if callback.data == f"YES_{str(id_users)}":
             await sql_check_yes(id_users)
+            try:
+                await bot.delete_message(callback.from_user.id, callback.message.message_id)
+            except MessageToDeleteNotFound :
+                print("message not found")
             await callback.answer("Объявление выложено")
             break
         elif callback.data == f"NO_{str(id_users)}":
@@ -269,7 +277,7 @@ async def form_yes_no(callback: types.CallbackQuery):
 if __name__ == "__main__":
     try:
         executor.start_polling(dp)
-    except TerminatedByOtherGetUpdates as ter:
-        print(ter)
-    except NetworkError as net:
-        print(net)
+    except TimeoutError:
+        print("time-error")
+    except TimeoutWarning:
+        print("time-warning")

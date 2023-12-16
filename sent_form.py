@@ -1,19 +1,18 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types, Dispatcher, Bot
+import time
+import datetime
+from config import TOKEN_API
 from keyboard import kb_start, kb_remove, check_auto_yes_and_no
 from week import day_week
 from data.form_data import sql_add_command, sql_add_command_check, sql_add_users
-from config import TOKEN
-import time
-import datetime
-#from dotenv import load_dotenv
-import os
 
-#load_dotenv()
-#TOKEN = token = os.environ.get("TOKEN")
+time.sleep(5)
 
-bot = Bot(token= TOKEN) 
+bot = Bot(TOKEN_API)
+
+time.sleep(5)
 
 smauto_bot = "-1001861129956"
 
@@ -159,14 +158,15 @@ async def phone_number(message: types.Message, state: FSMContext):
         media_photo.pop(1)
         
         await bot.send_media_group(smauto_bot, media_photo)
-        await bot.send_message(smauto_bot, f"Пришла заявка от пользователя: {data['name']} {data['last_name']}\n"
+        sent_message_i = await bot.send_message(smauto_bot, f"Пришла заявка от пользователя: {data['name']} {data['last_name']}\n"
                                         f"{data['day']}. Дата: {data['mday']}.{data['mon_day']}.{data['year_day']} Время: {result.tm_hour}:{result.tm_min}:{result.tm_sec} \n"
                                         f"Автомобиль: {data['marka']} {data['model']} Цена: {data['price']:,} руб\n", reply_markup=check_auto_yes_and_no(id_user))
         
         await bot.send_message(message.chat.id, text="Ваша заявка отправлена на проверку администрации. Дождитесь ответа", reply_markup=kb_start)
         
+        sent_message_i = str(sent_message_i.message_id)
         
-        sql_add_command_check(data['marka'], data['model'], data['year'], list_photo, data['description'], data['address'], data['price'], data['name'], data['last_name'], data['phone_number'], data['day'], data['mday'], data['mon_day'], data['year_day'], id_user, fname, lname, uname, status)
+        sql_add_command_check(data['marka'], data['model'], data['year'], list_photo, data['description'], data['address'], data['price'], data['name'], data['last_name'], data['phone_number'], data['day'], data['mday'], data['mon_day'], data['year_day'], id_user, fname, lname, uname, status, sent_message_i)
         sql_add_users(id_user, data['name'], data['last_name'], data['phone_number'], fname, lname, uname)
 
         print("Добавление автомобиля на проверку в базу занесено")
