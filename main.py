@@ -32,7 +32,7 @@ TO_SELL_AUTO = '''
 WELCOME_BACK = '''
 Главное меню!
 '''
-
+print("бот на сервере")
 sleep(5)
 
 bot = Bot(TOKEN_API)                              #  
