@@ -6,7 +6,8 @@ from config import TOKEN_API
 from keyboard import kb_start, kb_price_range, kb_form, kb_continue_form
 from sent_form import register_handlers_form, date, result
 from week import day_week
-from data.form_data import sql_start_auto, sql_start_users, sql_start_auto_check, sql_start_users_viewing, sql_my_remove_auto
+from data.settings_form import register_handlers_form_settings_price, register_handlers_form_settings_address, register_handlers_form_settings_description, register_handlers_form_settings_phone_number
+from data.form_data import sql_start_auto, sql_start_users, sql_start_auto_check, sql_start_users_viewing, sql_my_remove_auto, sql_my_settings_auto
 from data.form_data import sql_my_auto, sql_add_users_viewing, sql_check_yes, sql_check_no, sql_add_user_for_check_auto
 from data.form_data import sql_select_50_150, sql_select_150_300, sql_select_300_1, sql_select_1
 from data.form_data import sql_viewing_50_150, sql_viewing_150_300, sql_viewing_300_1, sql_viewing_1
@@ -33,13 +34,13 @@ WELCOME_BACK = '''
 Главное меню!
 '''
 
-sleep(5)
+
 
 bot = Bot(TOKEN_API)                              #  
 dp = Dispatcher(bot, storage=MemoryStorage())     #  Важные токены для отправки
                                                   #  и запуска бота
                                                   
-sleep(5)                                                 
+                                                 
                                                   
 admin_id_alex = 1387002896
 admin_id_andry = 678570906                        # 
@@ -62,7 +63,7 @@ sql_start_users()                #
 sql_start_auto_check()           #
 sql_start_users_viewing()        #
 
-sleep(5)
+sleep(1)
 
 #Перемещение по страницам --------------------------------------------------------------
 
@@ -231,46 +232,70 @@ async def sent_auto_contact(message: types.Message):
     elif next_auto_1 != -1:
         await sql_owner_1(message, next_auto_1)
 
-#Удаление лишние сообшений--------------------------------------------------
+#Удаление лишних сообшений--------------------------------------------------
 
 @dp.message_handler()
 async def delete_message(message: types.Message):
+    #await bot.send_message(message.chat.id, text=f'dfg dfzghdf [Координаты]({url}) SD SDGfdsgG', parse_mode='Markdown')
     await message.delete()
 
-#Изменить или удалить объявление-----------------------------------------------
 
-#@dp.callback_query_handler()
-#async def delete_my_auto(callback: types.CallbackQuery):
-#    if callback.data == "1":
-#        print(123)
-
-#Подтвердить объявление-----------------------------------------------------------
+#Подтвердить объявление----Изменить или удалить объявление-----------------------------
 
 @dp.callback_query_handler()
 async def form_yes_no(callback: types.CallbackQuery):
     users = sql_add_user_for_check_auto()
     for id_users in users:
+        
         if callback.data == f"YES_{str(id_users)}":
             await sql_check_yes(id_users)
             try:
                 await bot.delete_message(callback.from_user.id, callback.message.message_id)
-            except MessageToDeleteNotFound :
+            except MessageToDeleteNotFound:
                 print("message not found")
             await callback.answer("Объявление выложено")
             break
+        
         elif callback.data == f"NO_{str(id_users)}":
             await sql_check_no(id_users)
             await callback.answer("Объявление отклонено")
             break
-    id_users_auto_del = str(callback.data)[7:]
-    if callback.data == f"delete_{id_users_auto_del}":
-        await sql_my_remove_auto(id_users_auto_del)
-        id_users_auto_del = 0
-        await callback.answer("Объявление снято!")
-    else:
-        id_users_auto_del = 0
-                
+        
+    id_users_auto = str(callback.data)[7:]
     
+    if callback.data == f"delete_{id_users_auto}":
+        await sql_my_remove_auto(id_users_auto)
+        id_users_auto = 0
+        await callback.answer("Объявление снято!")
+        
+    elif callback.data == f"change_{id_users_auto}":
+        try:
+            await bot.delete_message(callback.from_user.id, callback.message.message_id)
+            await sql_my_settings_auto(id_users_auto)
+        except MessageToDeleteNotFound:
+            print("message not found")
+        callback.data = ""
+        
+    else:
+        id_users_auto = 0
+    
+    id_users_auto_price = str(callback.data)[6:]
+    id_users_auto_description = str(callback.data)[12:]
+    id_users_auto_phone_number = str(callback.data)[13:]
+    id_users_auto_address = str(callback.data)[8:]
+    
+    if callback.data == f"price_{id_users_auto_price}":
+        await register_handlers_form_settings_price(dp, id_users_auto_price)
+    
+    elif callback.data == f"description_{id_users_auto_description}":
+        await register_handlers_form_settings_description(dp, id_users_auto_description)
+    
+    elif callback.data == f"phone_number_{id_users_auto_phone_number}":
+        await register_handlers_form_settings_phone_number(dp, id_users_auto_phone_number)
+    
+    elif callback.data == f"address_{id_users_auto_address}":
+        await register_handlers_form_settings_address(dp, id_users_auto_address)
+
 
 #ЗАПУСК БОТА ----------------------------------
 

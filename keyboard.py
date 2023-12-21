@@ -54,8 +54,20 @@ def check_auto_yes_and_no(user_id):
 
 def change_del(auto):
     kb_change_del = types.InlineKeyboardMarkup(resize_keyboard=True)
-    kb_change = types.InlineKeyboardButton("Изменить объявление", callback_data=f"change")
-    kb_del = types.InlineKeyboardButton("Снять объявление",callback_data=f"delete_{auto[-1]}")
+    kb_change = types.InlineKeyboardButton("Изменить объявление", callback_data=f"change_{auto[-2]}_{auto[-1]}")
+    kb_del = types.InlineKeyboardButton("Снять объявление",callback_data=f"delete_{auto[-2]}_{auto[-1]}")
     kb_change_del.add(kb_change, kb_del)
     
     return kb_change_del
+
+
+def settings_auto(mess_auto_s, id_auto_s):
+    kb_change_settings = types.InlineKeyboardMarkup(resize_keyboard=True)
+    kb_price_s = types.InlineKeyboardButton("Цена", callback_data=f"price_{id_auto_s}_{mess_auto_s}")
+    kb_description_s = types.InlineKeyboardButton("Описание", callback_data=f"description_{id_auto_s}_{mess_auto_s}")
+    kb_phone_number_s = types.InlineKeyboardButton("Номер телефона", callback_data=f"phone_number_{id_auto_s}_{mess_auto_s}")
+    kb_address_s = types.InlineKeyboardButton("Адрес", callback_data=f"address_{id_auto_s}_{mess_auto_s}")
+    kb_change_settings.add(kb_address_s, kb_description_s, kb_phone_number_s, kb_price_s)
+    
+    return kb_change_settings
+    

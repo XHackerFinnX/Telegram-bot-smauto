@@ -8,11 +8,9 @@ from keyboard import kb_start, kb_remove, check_auto_yes_and_no
 from week import day_week
 from data.form_data import sql_add_command, sql_add_command_check, sql_add_users
 
-time.sleep(5)
 
 bot = Bot(TOKEN_API)
 
-time.sleep(5)
 
 smauto_bot = "-1001861129956"
 
@@ -142,7 +140,7 @@ async def phone_number(message: types.Message, state: FSMContext):
         lname = str(message.from_user.last_name)
         uname = '@' + str(message.from_user.username)
         status = "NO"
-        
+        url = f"https://yandex.ru/maps/?text={data['address']}".replace(" ", "_")
         media_photo = [types.InputMediaPhoto(list_photo[0], f"Пришла заявка от пользователя: {data['name']} {data['last_name']}\n"
                                                             f"{data['day']}. Дата: {data['mday']}.{data['mon_day']}.{data['year_day']} Время: {result.tm_hour}:{result.tm_min}:{result.tm_sec} \n"
                                                             f"Автомобиль: {data['marka']} {data['model']} Цена: {data['price']:,} руб\n"
@@ -150,9 +148,9 @@ async def phone_number(message: types.Message, state: FSMContext):
                                                             f"Модель: {data['model']}\n"
                                                             f"Год: {data['year']}\n"
                                                             f"Описание: {data['description']}\n"
-                                                            f"Адрес: {data['address']}\n"
+                                                            f"Адрес: [{data['address']}]({url})\n"
                                                             f"Телефон: {data['phone_number']}\n"
-                                                            f"Цена: {data['price']:,} руб\n")]
+                                                            f"Цена: {data['price']:,} руб\n", parse_mode='Markdown')]
         for i in list_photo:
             media_photo.append(types.InputMediaPhoto(i))
         media_photo.pop(1)
@@ -175,7 +173,7 @@ async def phone_number(message: types.Message, state: FSMContext):
 
 
 def register_handlers_form(dp: Dispatcher):
-    dp.register_message_handler(auto_form_start, commands=['Продолжить'],state=None)
+    dp.register_message_handler(auto_form_start, commands=["Продолжить"],state=None)
     dp.register_message_handler(auto_marka, state=Auto_Data.marka)
     dp.register_message_handler(auto_model, state=Auto_Data.model)
     for _ in range(3):

@@ -4,16 +4,15 @@ from aiogram import types, Dispatcher, Bot
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import TOKEN_API
 from aiogram import Bot, types
-from keyboard import kb_viewing, kb_price_range, kb_contact, kb_end, change_del, kb_back_global
+from keyboard import kb_viewing, kb_price_range, kb_contact, kb_end, change_del, kb_back_global, settings_auto, kb_start
 import time
 
 import os.path
 
-time.sleep(5)
 
 bot = Bot(TOKEN_API)
 
-time.sleep(5)
+time.sleep(1)
 
 #Подключение базы данных----------------------------------------------
 
@@ -43,7 +42,8 @@ def sql_start_auto():
                                                         fname TEXT,
                                                         lname TEXT,
                                                         uname TEXT,
-                                                        status TEXT)''')
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
     base.commit()
  
 
@@ -116,9 +116,9 @@ def sql_start_users_viewing():
 
 #Добавление машины в базу данных-----------------------------------------------
 
-def sql_add_command(marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status):
+def sql_add_command(marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message):
     photo = json.dumps(photo)
-    cur.execute(f"INSERT INTO form_auto VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status))
+    cur.execute(f"INSERT INTO form_auto VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message))
     base.commit()
     
 
@@ -230,7 +230,7 @@ async def sql_check_yes(id_user):
                 
                 info = db.execute(f"SELECT marka, model, year, photo, description, address, price, name, last_name, phone_number, day, mday, mon_day, year_day, id_user, fname, lname, uname, status, sent_message FROM form_check_auto WHERE {id_user}").fetchall()
                 photo = json.loads(info[0][3])
-                sql_add_command(info[0][0], info[0][1], info[0][2], photo, info[0][4], info[0][5], info[0][6], info[0][7], info[0][8], info[0][9], info[0][10], info[0][11], info[0][12], info[0][13], info[0][14], info[0][15], info[0][16], info[0][17], "YES")
+                sql_add_command(info[0][0], info[0][1], info[0][2], photo, info[0][4], info[0][5], info[0][6], info[0][7], info[0][8], info[0][9], info[0][10], info[0][11], info[0][12], info[0][13], info[0][14], info[0][15], info[0][16], info[0][17], "YES", info[0][19])
                 db.commit()
                 
                 db.execute(f"DELETE FROM form_check_auto WHERE id_user = {id_user}")
@@ -312,17 +312,19 @@ async def sql_my_remove_auto(id_user):
                                                         fname TEXT,
                                                         lname TEXT,
                                                         uname TEXT,
-                                                        status TEXT)''')
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
         db_r.commit()
         
-        for id in db_r.execute(f"SELECT id_user, status FROM form_auto").fetchall():
-            if id_user == id[0]:
+        id_user = id_user.split("_")
+        for id in db_r.execute(f"SELECT id_user, status, sent_message FROM form_auto").fetchall():
+            if id_user[0] == id[0]:
                 db_r.commit()
                 
-                db_r.execute(f"DELETE FROM form_auto WHERE id_user = {id_user}")
+                db_r.execute(f"DELETE FROM form_auto WHERE (sent_message = '{id_user[1]}' AND id_user = '{id_user[0]}')")
                 db_r.commit()
                 
-                await bot.send_message(id_user, text="Ваше объявление снято!")
+                await bot.send_message(id_user[0], text="Ваше объявление снято!")
         
 #Следующее авто----------------------------------------------------------------    
     
@@ -431,7 +433,8 @@ async def sql_my_auto(message: types.Message):
                                                         fname TEXT,
                                                         lname TEXT,
                                                         uname TEXT,
-                                                        status TEXT)''')
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
         db.commit()
         
         for id in cur.execute(f"SELECT id_user FROM form_auto").fetchall():
@@ -445,8 +448,9 @@ async def sql_my_auto(message: types.Message):
 
         if str(message.chat.id) == str(my_id_users):
             await bot.send_message(message.chat.id , text="Ваши автомобили!", reply_markup=kb_back_global)
-            for my_auto in cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day, id_user FROM form_auto WHERE id_user == '{message.chat.id}'").fetchall():
+            for my_auto in cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day, id_user, sent_message FROM form_auto WHERE id_user == '{message.chat.id}'").fetchall():
                 photo = json.loads(my_auto[3])
+                url = f"https://yandex.ru/maps/?text={my_auto[5]}".replace(" ", "_")
                 media_photo = [types.InputMediaPhoto(photo[0],  f"{my_auto[7]}. Дата: {my_auto[8]}.{my_auto[9]}.{my_auto[10]}\n")]
 
                 for i in photo:
@@ -458,8 +462,8 @@ async def sql_my_auto(message: types.Message):
                                                         f"Модель: {my_auto[1]}\n"
                                                         f"Год: {my_auto[2]}\n"
                                                         f"Описание: {my_auto[4]}\n"
-                                                        f"Адрес: {my_auto[5]}\n"
-                                                        f"Цена: {my_auto[6]:,} руб\n", reply_markup=change_del(my_auto))
+                                                        f"Адрес: [{my_auto[5]}]({url})\n"
+                                                        f"Цена: {my_auto[6]:,} руб\n", parse_mode='Markdown', reply_markup=change_del(my_auto))
                 time.sleep(1)
                 db.commit()
         else:
@@ -471,14 +475,15 @@ async def sql_viewing_50_150(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall()
     info = info[viewing_auto]
     photo = json.loads(info[3])
+    url = f"https://yandex.ru/maps/?text={info[5]}".replace(" ", "_")
     media_photo = [types.InputMediaPhoto(photo[0],  f"{info[7]}. Дата: {info[8]}.{info[9]}.{info[10]}\n"
                                                             f"Автомобиль: {info[0]} {info[1]} {info[2]} Цена: {info[6]:,} руб\n"
                                                             f"Марка: {info[0]}\n"
                                                             f"Модель: {info[1]}\n"
                                                             f"Год: {info[2]}\n"
                                                             f"Описание: {info[4]}\n"
-                                                            f"Адрес: {info[5]}\n"
-                                                            f"Цена: {info[6]:,} руб\n")]
+                                                            f"Адрес: [{info[5]}]({url})\n"
+                                                            f"Цена: {info[6]:,} руб\n", parse_mode='Markdown')]
     for i in photo:
         media_photo.append(types.InputMediaPhoto(i))
     media_photo.pop(1)
@@ -490,14 +495,15 @@ async def sql_viewing_150_300(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price BETWEEN 150000 AND 300000").fetchall()
     info = info[viewing_auto]
     photo = json.loads(info[3])
+    url = f"https://yandex.ru/maps/?text={info[5]}".replace(" ", "_")
     media_photo = [types.InputMediaPhoto(photo[0],  f"{info[7]}. Дата: {info[8]}.{info[9]}.{info[10]}\n"
                                                             f"Автомобиль: {info[0]} {info[1]} {info[2]} Цена: {info[6]:,} руб\n"
                                                             f"Марка: {info[0]}\n"
                                                             f"Модель: {info[1]}\n"
                                                             f"Год: {info[2]}\n"
                                                             f"Описание: {info[4]}\n"
-                                                            f"Адрес: {info[5]}\n"
-                                                            f"Цена: {info[6]:,} руб\n")]
+                                                            f"Адрес: [{info[5]}]({url})\n"
+                                                            f"Цена: {info[6]:,} руб\n", parse_mode='Markdown')]
     for i in photo:
         media_photo.append(types.InputMediaPhoto(i))
     media_photo.pop(1)
@@ -509,14 +515,15 @@ async def sql_viewing_300_1(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price BETWEEN 300000 AND 1000000").fetchall()
     info = info[viewing_auto]
     photo = json.loads(info[3])
+    url = f"https://yandex.ru/maps/?text={info[5]}".replace(" ", "_")
     media_photo = [types.InputMediaPhoto(photo[0],  f"{info[7]}. Дата: {info[8]}.{info[9]}.{info[10]}\n"
                                                             f"Автомобиль: {info[0]} {info[1]} {info[2]} Цена: {info[6]:,} руб\n"
                                                             f"Марка: {info[0]}\n"
                                                             f"Модель: {info[1]}\n"
                                                             f"Год: {info[2]}\n"
                                                             f"Описание: {info[4]}\n"
-                                                            f"Адрес: {info[5]}\n"
-                                                            f"Цена: {info[6]:,} руб\n")]
+                                                            f"Адрес: [{info[5]}]({url})\n"
+                                                            f"Цена: {info[6]:,} руб\n", parse_mode='Markdown')]
     for i in photo:
         media_photo.append(types.InputMediaPhoto(i))
     media_photo.pop(1)
@@ -528,14 +535,15 @@ async def sql_viewing_1(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT marka, model, year, photo, description, address, price, day, mday, mon_day, year_day FROM form_auto WHERE price > 1000000").fetchall()
     info = info[viewing_auto]
     photo = json.loads(info[3])
+    url = f"https://yandex.ru/maps/?text={info[5]}".replace(" ", "_")
     media_photo = [types.InputMediaPhoto(photo[0],  f"{info[7]}. Дата: {info[8]}.{info[9]}.{info[10]}\n"
                                                             f"Автомобиль: {info[0]} {info[1]} {info[2]} Цена: {info[6]:,} руб\n"
                                                             f"Марка: {info[0]}\n"
                                                             f"Модель: {info[1]}\n"
                                                             f"Год: {info[2]}\n"
                                                             f"Описание: {info[4]}\n"
-                                                            f"Адрес: {info[5]}\n"
-                                                            f"Цена: {info[6]:,} руб\n")]
+                                                            f"Адрес: [{info[5]}]({url})\n"
+                                                            f"Цена: {info[6]:,} руб\n", parse_mode='Markdown')]
     for i in photo:
         media_photo.append(types.InputMediaPhoto(i))
     media_photo.pop(1)
@@ -547,6 +555,7 @@ async def sql_viewing_1(message: types.Message, viewing_auto):
 async def sql_owner_50_150(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price BETWEEN 0 AND 150000").fetchall()
     info = info[viewing_auto]
+    url = f"https://yandex.ru/maps/?text={info[6]}".replace(" ", "_")
     data_owner = f"Имя: {info[0]}\nФамилия: {info[1]}\nНомер телефона: {info[2]}\nТелеграм: {info[3]} {info[4]} или {info[5]}\nАдрес: {info[6]}"
     
     await bot.send_message(message.chat.id, text=data_owner, reply_markup=kb_end)
@@ -555,6 +564,7 @@ async def sql_owner_50_150(message: types.Message, viewing_auto):
 async def sql_owner_150_300(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price BETWEEN 150000 AND 300000").fetchall()
     info = info[viewing_auto]
+    url = f"https://yandex.ru/maps/?text={info[6]}".replace(" ", "_")
     data_owner = f"Имя: {info[0]}\nФамилия: {info[1]}\nНомер телефона: {info[2]}\nТелеграм: {info[3]} {info[4]} или {info[5]}\nАдрес: {info[6]}"
     
     await bot.send_message(message.chat.id, text=data_owner, reply_markup=kb_end)
@@ -563,6 +573,7 @@ async def sql_owner_150_300(message: types.Message, viewing_auto):
 async def sql_owner_300_1(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price BETWEEN 300000 AND 1000000").fetchall()
     info = info[viewing_auto]
+    url = f"https://yandex.ru/maps/?text={info[6]}".replace(" ", "_")
     data_owner = f"Имя: {info[0]}\nФамилия: {info[1]}\nНомер телефона: {info[2]}\nТелеграм: {info[3]} {info[4]} или {info[5]}\nАдрес: {info[6]}"
     
     await bot.send_message(message.chat.id, text=data_owner, reply_markup=kb_end)
@@ -571,11 +582,180 @@ async def sql_owner_300_1(message: types.Message, viewing_auto):
 async def sql_owner_1(message: types.Message, viewing_auto):
     info = cur.execute(f"SELECT name, last_name, phone_number, fname, lname, uname, address FROM form_auto WHERE price > 1000000").fetchall()
     info = info[viewing_auto]
+    url = f"https://yandex.ru/maps/?text={info[6]}".replace(" ", "_")
     data_owner = f"Имя: {info[0]}\nФамилия: {info[1]}\nНомер телефона: {info[2]}\nТелеграм: {info[3]} {info[4]} или {info[5]}\nАдрес: {info[6]}"
     
     await bot.send_message(message.chat.id, text=data_owner, reply_markup=kb_end)
     
 #Удалить объявление----------------------------------------------
 
-async def sql_my_delete(message: types.Message, viewing_auto):
-    pass
+async def sql_my_settings_auto(id_users):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "form.db")
+    with sq.connect(db_path) as db:
+        cur = db.cursor()
+        db.execute('''CREATE TABLE IF NOT EXISTS form_auto(marka TEXT,
+                                                        model TEXT,
+                                                        year TEXT,
+                                                        photo TEXT,
+                                                        description TEXT,
+                                                        address TEXT,
+                                                        price INTEGER,
+                                                        name TEXT,
+                                                        last_name TEXT,
+                                                        phone_number TEXT,
+                                                        day TEXT,
+                                                        mday TEXT,
+                                                        mon_day TEXT,
+                                                        year_day TEXT,
+                                                        id_user TEXT,
+                                                        fname TEXT,
+                                                        lname TEXT,
+                                                        uname TEXT,
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
+        db.commit()
+        
+        id_users = id_users.split("_")
+
+        auto_my_sett = cur.execute(f"SELECT description, address, price, phone_number, id_user, sent_message FROM form_auto WHERE (id_user == '{id_users[0]}' AND sent_message == '{id_users[1]}')").fetchall()
+        await bot.send_message(chat_id= id_users[0], text="Выберите пункт, который хотите изменить!", reply_markup= settings_auto(auto_my_sett[0][-1], auto_my_sett[0][-2]))
+
+
+async def sql_price_settings(price, id_users_price):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "form.db")
+    with sq.connect(db_path) as db:
+        cur = db.cursor()
+        db.execute('''CREATE TABLE IF NOT EXISTS form_auto(marka TEXT,
+                                                        model TEXT,
+                                                        year TEXT,
+                                                        photo TEXT,
+                                                        description TEXT,
+                                                        address TEXT,
+                                                        price INTEGER,
+                                                        name TEXT,
+                                                        last_name TEXT,
+                                                        phone_number TEXT,
+                                                        day TEXT,
+                                                        mday TEXT,
+                                                        mon_day TEXT,
+                                                        year_day TEXT,
+                                                        id_user TEXT,
+                                                        fname TEXT,
+                                                        lname TEXT,
+                                                        uname TEXT,
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
+        db.commit()
+        
+        id_users_price = id_users_price.split("_")
+
+        cur.execute(f"UPDATE form_auto SET price = {price} WHERE (id_user == '{id_users_price[0]}' AND sent_message == '{id_users_price[1]}')")
+        db.commit()
+        await bot.send_message(id_users_price[0], text="Цена изменена!", reply_markup=kb_start)
+        return
+
+async def sql_description_settings(description, id_users_description):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "form.db")
+    with sq.connect(db_path) as db:
+        cur = db.cursor()
+        db.execute('''CREATE TABLE IF NOT EXISTS form_auto(marka TEXT,
+                                                        model TEXT,
+                                                        year TEXT,
+                                                        photo TEXT,
+                                                        description TEXT,
+                                                        address TEXT,
+                                                        price INTEGER,
+                                                        name TEXT,
+                                                        last_name TEXT,
+                                                        phone_number TEXT,
+                                                        day TEXT,
+                                                        mday TEXT,
+                                                        mon_day TEXT,
+                                                        year_day TEXT,
+                                                        id_user TEXT,
+                                                        fname TEXT,
+                                                        lname TEXT,
+                                                        uname TEXT,
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
+        db.commit()
+        
+        id_users_description = id_users_description.split("_")
+        
+        cur.execute(f"UPDATE form_auto SET description = '{description}' WHERE (id_user == '{id_users_description[0]}' AND sent_message == '{id_users_description[1]}')")
+        db.commit()
+        await bot.send_message(id_users_description[0], text="Описание изменено!", reply_markup=kb_start)
+        return
+
+
+async def sql_phone_number_settings(phone_number, id_users_phone_number):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "form.db")
+    with sq.connect(db_path) as db:
+        cur = db.cursor()
+        db.execute('''CREATE TABLE IF NOT EXISTS form_auto(marka TEXT,
+                                                        model TEXT,
+                                                        year TEXT,
+                                                        photo TEXT,
+                                                        description TEXT,
+                                                        address TEXT,
+                                                        price INTEGER,
+                                                        name TEXT,
+                                                        last_name TEXT,
+                                                        phone_number TEXT,
+                                                        day TEXT,
+                                                        mday TEXT,
+                                                        mon_day TEXT,
+                                                        year_day TEXT,
+                                                        id_user TEXT,
+                                                        fname TEXT,
+                                                        lname TEXT,
+                                                        uname TEXT,
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
+        db.commit()
+        
+        id_users_phone_number = id_users_phone_number.split("_")
+        
+        cur.execute(f"UPDATE form_auto SET phone_number = '{phone_number}' WHERE (id_user == '{id_users_phone_number[0]}' AND sent_message == '{id_users_phone_number[1]}')")
+        db.commit()
+        await bot.send_message(id_users_phone_number[0], text="Номер телефона изменен!", reply_markup=kb_start)
+        return
+
+
+async def sql_address_settings(address, id_users_address):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "form.db")
+    with sq.connect(db_path) as db:
+        cur = db.cursor()
+        db.execute('''CREATE TABLE IF NOT EXISTS form_auto(marka TEXT,
+                                                        model TEXT,
+                                                        year TEXT,
+                                                        photo TEXT,
+                                                        description TEXT,
+                                                        address TEXT,
+                                                        price INTEGER,
+                                                        name TEXT,
+                                                        last_name TEXT,
+                                                        phone_number TEXT,
+                                                        day TEXT,
+                                                        mday TEXT,
+                                                        mon_day TEXT,
+                                                        year_day TEXT,
+                                                        id_user TEXT,
+                                                        fname TEXT,
+                                                        lname TEXT,
+                                                        uname TEXT,
+                                                        status TEXT,
+                                                        sent_message TEXT)''')
+        db.commit()
+        
+        id_users_address = id_users_address.split("_")
+        
+        cur.execute(f"UPDATE form_auto SET address = '{address}' WHERE (id_user == '{id_users_address[0]}' AND sent_message == '{id_users_address[1]}')")
+        db.commit()
+        await bot.send_message(id_users_address[0], text="Адрес изменен!", reply_markup=kb_start)
+        return
