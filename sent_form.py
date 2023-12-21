@@ -8,15 +8,9 @@ from keyboard import kb_start, kb_remove, check_auto_yes_and_no
 from week import day_week
 from data.form_data import sql_add_command, sql_add_command_check, sql_add_users
 
-<<<<<<< HEAD
 
 bot = Bot(TOKEN_API)
 
-=======
-bot = Bot(TOKEN_API)
-
-time.sleep(30)
->>>>>>> 4112548a7d91d06d552452cbc99f4eb06f6fc5e3
 
 smauto_bot = "-1001861129956"
 

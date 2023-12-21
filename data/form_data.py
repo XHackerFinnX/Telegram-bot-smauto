@@ -9,18 +9,10 @@ import time
 
 import os.path
 
-<<<<<<< HEAD
 
 bot = Bot(TOKEN_API)
 
 time.sleep(1)
-=======
-time.sleep(30)
-
-bot = Bot(TOKEN_API)
-
-time.sleep(30)
->>>>>>> 4112548a7d91d06d552452cbc99f4eb06f6fc5e3
 
 #Подключение базы данных----------------------------------------------
 

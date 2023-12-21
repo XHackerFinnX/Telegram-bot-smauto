@@ -33,23 +33,14 @@ TO_SELL_AUTO = '''
 WELCOME_BACK = '''
 Главное меню!
 '''
-<<<<<<< HEAD
 
 
-=======
-print("бот на сервере")
-sleep(30)
->>>>>>> 4112548a7d91d06d552452cbc99f4eb06f6fc5e3
 
 bot = Bot(TOKEN_API)                              #  
 dp = Dispatcher(bot, storage=MemoryStorage())     #  Важные токены для отправки
                                                   #  и запуска бота
                                                   
-<<<<<<< HEAD
                                                  
-=======
-sleep(30)                                                 
->>>>>>> 4112548a7d91d06d552452cbc99f4eb06f6fc5e3
                                                   
 admin_id_alex = 1387002896
 admin_id_andry = 678570906                        # 
@@ -66,20 +57,13 @@ async def start_command(message: types.Message):  #
     await message.delete()                        #--------------
 
 register_handlers_form(dp) #Форма для продажи автомобиля
-sleep(30)
+
 sql_start_auto()                 #Запуск базы данных
-sleep(30)
 sql_start_users()                #
-sleep(30)
 sql_start_auto_check()           #
-sleep(30)
 sql_start_users_viewing()        #
 
-<<<<<<< HEAD
 sleep(1)
-=======
-sleep(30)
->>>>>>> 4112548a7d91d06d552452cbc99f4eb06f6fc5e3
 
 #Перемещение по страницам --------------------------------------------------------------
 
@@ -318,7 +302,6 @@ async def form_yes_no(callback: types.CallbackQuery):
 if __name__ == "__main__":
     try:
         executor.start_polling(dp)
-        sleep(30)
     except TimeoutError:
         print("time-error")
     except TimeoutWarning:
